@@ -20,5 +20,12 @@
   "bugs": {
     "url": "https://github.com/seventrust/prototipo-new/issues"
   },
-  "homepage": "https://github.com/seventrust/prototipo-new#readme"
+  "homepage": "https://github.com/seventrust/prototipo-new#readme",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "express": "^4.16.2"
+  },
+  "devDependencies": {
+    "typescript-eslint-parser": "^9.0.1"
+  }
 }
