@@ -1,0 +1,91 @@
+{
+  "development": {
+    "SERVERURL": "http://localhost:3001/",
+    "PORT": 8000,
+    "HOST_BD": "localhost",
+    "USER_BD": "yromero",
+    "PASS_BD": "2959707",
+    "SCHEME_DES": "brightspacedatasetstmp",
+    "SCHEME_NOR": "brightspacedatasets",
+    "CALLBACK" : "http://localhost",
+    "EXTENSION_CSV" : "csv",
+    "EXTENSION_ZIP": "zip",
+    "STATUS_OK" : 200,
+    "STATUS_WAIT" : 202,
+    "JOB_STATUS": {
+      "QUEUED": 0,
+      "PROCESANDO": 1,
+      "COMPLETE": 2,
+      "ERROR": 3,
+      "DELETED": 4
+    },
+    "DATASET_1" : "ff842aae-84d0-4e39-9db4-3ae51d36bb0e",
+    "DATASET_2" : "c1bf7603-669f-4bef-8cf4-651b914c4678",
+    "DATASET_3" : "be5e86b8-9723-4ad7-af63-86783a77a1a1",
+    "DATASET_4" : "c195aa85-b2be-4444-aa52-570e19bfee9e",
+    "DATASET_5" : "af389020-439b-4d54-969e-edb9ff243a47",
+    "DATASET_6" : "df7d0ef3-bcab-4171-bc37-5929d5867cd8",
+    "TABLAS_HUB": {
+      "TABLA_CALIFICACIONES":"calificaciones",
+      "TABLA_INSCRIPCIONES":"inscripciones",
+      "TABLA_TODAS":"todas",
+      "TABLA_USO":"uso",
+      "TABLA_CLOE":"cloe",
+      "TABLA_UTIL":"utilizacin"
+    },
+    "TABLAS_SETS":{
+
+    },
+    "MAIL_OPTIONS": {
+      "SERVICIO": "gmail",
+      "EMAIL": "soporte@tuclase.cl",
+      "PASS": "tuclase55",
+      "PARA": "yromero@tuclase.cl",
+      "ASUNTO": "Control de Errores en ETL Metabase"
+    }
+  },
+  "production": {
+    "SERVERURL": "https://tuaplicacion.tuclase.cl/",
+    "PORT": 5000,
+    "HOST_BD": "localhost",
+    "USER_BD": "yromero",
+    "PASS_BD": "2959707",
+    "SCHEME_DES": "brightspacedatasetstmp",
+    "SCHEME_NOR": "brightspacedatasets",
+    "CALLBACK" : "http://localhost",
+    "EXTENSION_CSV" : "csv",
+    "EXTENSION_ZIP": "zip",
+    "STATUS_OK" : 200,
+    "STATUS_WAIT" : 202,
+    "BAD_REQUEST": 400,
+    "JOB_STATUS": {
+      "QUEUED":     0,
+      "PROCESANDO": 1,
+      "COMPLETE":   2,
+      "ERROR":      3,
+      "DELETED":    4
+    },
+    "DATASET_1" : "Calificaciones finales",
+    "DATASET_2" : "Inscripciones y bajas",
+    "DATASET_3" : "Todas las calificaciones",
+    "DATASET_4" : "Uso del estudiante",
+    "DATASET_5" : "CLOE (evaluación de resultados de aprendizaje del curso)",
+    "DATASET_6" : "Utilización de instructores",
+    "TABLAS_HUB": {
+      "TABLA_CALIFICACIONES":"calificaciones",
+      "TABLA_INSCRIPCIONES":"inscripciones",
+      "TABLA_TODAS":"todas",
+      "TABLA_USO":"uso",
+      "TABLA_CLOE":"cloe",
+      "TABLA_UTIL":"utilizacin"
+    },
+    "MAIL_OPTIONS": {
+      "SERVICIO": "gmail",
+      "EMAIL": "soporte@tuclase.cl",
+      "PASS": "tuclase55",
+      "PARA": "yromero@tuclase.cl",
+      "ASUNTO": "Control de Errores en ETL Metabase"
+    }
+
+  }
+}

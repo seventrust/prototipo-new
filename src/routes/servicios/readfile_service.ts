@@ -1,56 +1,61 @@
 import * as fs from 'fs'
-import * as readline from  'readline'
-import * as stream from 'stream'
+//import * as readline from  'readline'
+//import * as stream from 'stream'
+import * as lineReader from 'line-by-line'
 import * as path from 'path'
 import * as moment from 'moment'
+import logger from '../utils/logger_module'
 // rl.on('close', function() {
 //   // do something on finish here
 // });
 
 class Readfile {
-  public instream
-  public outstream
-  public rl
-  public dir
+  private dir
+  private dir_mod
   private fechaActual
-  private idProceso
+  private lr: lineReader
+
   contructor(){
-    //this.eventManager()
+
   }
 
-  public initProcess(req: any, res: any): void {
-
-    this.dir = path.join(__dirname, '../../../tmp_dt')
-    this.instream = fs.createReadStream(`${this.dir}/SessionHistory.csv`)
-    this.outstream = new stream
-    this.rl = readline.createInterface(this.instream, this.outstream)
-    this.fechaActual = moment().format('YYYY-MM-DD h:mm:ss')
-    this.idProceso = 1
+  public initProcess(idProceso: string, fileOffset: number): Promise<any> {
     var contador: number = 0
-    //Evento de lectura de linea
-    this.rl.on('line', line => {
-      if(contador <= 0){
-        line += ', IdProceso, FechaProceso\n'
-      }else if(contador > 0){
-        line += `, ${this.idProceso}, ${this.fechaActual}\n`
-      }
+    let options: any = {
+      encoding: 'utf8',
+      skipEmptyLines: true,
+      start: fileOffset
+    }
+    this.dir = path.join(__dirname, '../../../tmp_dt')
+    this.dir_mod = path.join(__dirname, '../../../tmp_mod')
+    this.lr = new lineReader(`${this.dir}/SessionHistory.csv`, options)
+    this.fechaActual = moment().format('YYYY-MM-DD h:mm:ss')
 
-      contador+=1
-      fs.appendFile(`${this.dir}/SessionHistory_Modificado.csv`, line, err => {
-        if (err) throw err
+    var promise = new Promise((resolve, reject) => {
+
+      this.lr.on('line', line => {
+        if(contador <= 0){
+          line += ', IdProceso, FechaProceso\n'
+        }else if(contador > 0){
+          line += `, ${idProceso}, ${this.fechaActual}\n`
+        }
+        contador+=1
+        fs.appendFile(`${this.dir_mod}/SessionHistory_Modificado.csv`, line, err => {
+          if (err) reject(err)
+        })
       })
 
-    })
-    //Evento cuando se termina de ejecutar el proceso de lectura y se cierra
-    //el archivo
-    this.rl.on('close', () => {
-      res.json({
-        status: 200,
-        message: `Se termino de ejecutar el proceso de introduccion`
+      this.lr.on('error', error => {
+        if (error) reject(error)
       })
-      contador = 0
-      //console.log(contador)
+
+      this.lr.on('end', () => {
+        resolve({estado: true, offset: contador})
+        contador = 0
+        logger("CONTADOR - CLOSE", contador)
+      })
     })
+    return promise
   }
 }
 
