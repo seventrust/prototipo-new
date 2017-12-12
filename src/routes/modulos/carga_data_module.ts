@@ -6,6 +6,7 @@ import * as parse from 'csv-parse'
 import * as async from 'async'
 import * as mysql from 'mysql'
 import * as util from 'util'
+import * as lineReader from 'line-by-line'
 import * as leftpad from 'leftpad'
 import entorno from '../utils/config_module'
 import logger from '../utils/logger_module'
@@ -125,36 +126,86 @@ class CargaData {
   public insertDataToTables(context: any): Promise<any> {
     //logger("Insert Data To Tables", context.file)
     var promise = new Promise((resolve, reject) => {
-      fs.createReadStream(`${this.dir}${context.file}`).pipe(parse({
-        delimiter: ',',
-        columns: true,
-        relax_column_count: true
-      }, (err, data) => {
-          if (err) reject(err);
-          async.eachSeries(data, (datum, next) => {
-              logger("A punto de", `run INSERT INTO ${context.tblname} ( ${context.fieldnms} ) VALUES ( ${context.qs} )`);
-            var d = [];
-            try {
-                context.headers.forEach(hdr => {
-                    d.push(datum[hdr]);
-                });
-            } catch (e) {
-                console.error(e.stack);
-            }
-            // console.log(`${d.length}: ${util.inspect(d)}`);
-            if (d.length > 0) {
-                context.db.query(`INSERT INTO ${context.tblname} ( ${context.fieldnms} ) VALUES ( ${context.qs} )`, d,
-                err => {
-                    if (err) { logger("Ocurrió un error", err); next(err); }
-                    else setTimeout(() => { next(); });
-                });
-            } else { logger("Mensaje", `empty row ${util.inspect(datum)} ${util.inspect(d)}`); next(); }
-          },
-          err => {
-              if (err) reject(err)
-              else context.finaliza = true; resolve(context);
+      var finalString: string  = ""
+      this.dir = path.join(__dirname, '../../../tmp_mod')
+      let lr = new lineReader(`${this.dir}/${context.file}`,
+        {
+          encoding: 'utf8',
+          skipEmptyLines: true,
+          start: 2
+      })
+      var preArray = []
+      var finalArray = []
+
+      context.db.getConnection((err, conn) => {
+        if(err) logger("Error de Conexion", err); reject(err)
+
+        lr.on('line', line => {
+          let preString = line.split(',')
+          preString.forEach(cadena => {
+            cadena = `"${cadena}"`
+            finalString += cadena+","
           })
-      }))
+          lr.pause()
+          finalString = finalString.substring(0, finalString.length - 1 )
+          conn.query(`INSERT INTO ${context.tblname} ( ${context.fieldnms} ) VALUES (?)`, [finalString],
+            err => {
+                if(err) {
+                  logger("Error de inserción", err.message)
+                  reject(err)
+                }else {
+                  conn.release()
+                  lr.resume()
+                }
+          })
+        })
+
+        lr.on('error', e => {
+          logger("Error en Lectura", e)
+          reject(e)
+        })
+
+        lr.on('end', () => {
+          //finalArray.push(preArray)
+          //logger("Este es el Array", finalArray)
+          resolve(context)
+        })
+
+
+
+      })
+
+
+      // fs.createReadStream(`${this.dir}${context.file}`).pipe(parse({
+      //   delimiter: ',',
+      //   columns: true,
+      //   relax_column_count: true
+      // }, (err, data) => {
+      //     if (err) reject(err);
+      //     async.eachSeries(data, (datum, next) => {
+      //         logger("A punto de", `run INSERT INTO ${context.tblname} ( ${context.fieldnms} ) VALUES ( ${context.qs} )`);
+      //       var d = [];
+      //       try {
+      //           context.headers.forEach(hdr => {
+      //               d.push(datum[hdr]);
+      //           });
+      //       } catch (e) {
+      //           console.error(e.stack);
+      //       }
+      //       // console.log(`${d.length}: ${util.inspect(d)}`);
+      //       if (d.length > 0) {
+      //           context.db.query(`INSERT INTO ${context.tblname} ( ${context.fieldnms} ) VALUES ( ${context.qs} )`, d,
+      //           err => {
+      //               if (err) { logger("Ocurrió un error", err); next(err); }
+      //               else setTimeout(() => { next(); });
+      //           });
+      //       } else { logger("Mensaje", `empty row ${util.inspect(datum)} ${util.inspect(d)}`); next(); }
+      //     },
+      //     err => {
+      //         if (err) reject(err)
+      //         else context.finaliza = true; resolve(context);
+      //     })
+      // }))
     })
 
     return promise
