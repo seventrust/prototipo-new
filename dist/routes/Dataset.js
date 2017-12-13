@@ -57,15 +57,15 @@ class Dataset {
             input['uuid'] = id;
             //Se hace el llamdo al metodo para empezar a realizar la carga del cvs
             var context = yield carga_data_module_1.default.iniciarCarga();
-            logger_module_1.default("Contexto parte 1", JSON.stringify(context));
+            //logger("Contexto parte 1", JSON.stringify(context))
             context = yield carga_data_module_1.default.getConnection(context);
-            logger_module_1.default("Contexto parte 2", context);
+            //logger("Contexto parte 2", context)
             context = yield carga_data_module_1.default.dropTables(context);
             //logger("Contexto parte 3", context)
             context = yield carga_data_module_1.default.createTables(context);
             //logger("Contexto parte 4", context)
             context = yield carga_data_module_1.default.insertDataToTables(context);
-            //logger("Contexto parte 5", context)
+            logger_module_1.default("Contexto parte 5", context);
             if (!context.finaliza) {
                 logger_module_1.default('Mala', 'Ocurrio algo muy malo xD');
             }

@@ -53,15 +53,15 @@ class Dataset {
     input['uuid'] = id
     //Se hace el llamdo al metodo para empezar a realizar la carga del cvs
     var context = await cargaData.iniciarCarga()
-    logger("Contexto parte 1", JSON.stringify(context))
+    //logger("Contexto parte 1", JSON.stringify(context))
     context = await cargaData.getConnection(context)
-    logger("Contexto parte 2", context)
+    //logger("Contexto parte 2", context)
     context = await cargaData.dropTables(context)
     //logger("Contexto parte 3", context)
     context = await cargaData.createTables(context)
     //logger("Contexto parte 4", context)
     context = await cargaData.insertDataToTables(context)
-    //logger("Contexto parte 5", context)
+    logger("Contexto parte 5", context)
     if(!context.finaliza){
       logger('Mala', 'Ocurrio algo muy malo xD')
     }else {

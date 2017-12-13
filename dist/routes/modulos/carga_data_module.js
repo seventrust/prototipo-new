@@ -118,94 +118,70 @@ class CargaData {
         return promise;
     }
     insertDataToTables(context) {
-        let finalString = "";
-        //Aquí iría el número real del offset o la cadena
-        //para saber cual fué la última línea
-        let offset = 0;
-        let preArray = [];
-        let finalArray = [];
-        var promise = new Promise((resolve, reject) => {
-            this.dir = path.join(__dirname, '../../../tmp_mod');
-            let lr = new lineReader(`${this.dir}/${context.file}`, {
-                encoding: 'utf8',
-                skipEmptyLines: true,
-            });
-            context.db.getConnection((err, conn) => {
-                if (err)
-                    logger_module_1.default("Error de Conexion", err);
-                reject(err);
-                lr.on('line', line => {
-                    if (offset == 0) {
-                        //logger("LOGGER", offset)
-                    }
-                    else {
-                        let preString = line.split(',');
-                        lr.pause();
-                        preString.forEach(cadena => {
-                            preArray.push(`${cadena}`);
-                        });
-                        finalArray.push(preArray);
-                        lr.resume();
-                        if (offset == 10) {
-                            lr.pause();
-                            console.log(finalArray);
-                            conn.query(`INSERT INTO ${context.tblname} ( ${context.fieldnms} ) VALUES ?`, [finalArray], err => {
-                                if (err) {
-                                    logger_module_1.default("Error de inserción", err.sqlMessage);
-                                    reject(err);
-                                }
-                                else {
-                                    offset = 0;
-                                    lr.resume();
-                                }
-                            });
+        try {
+            let finalString = "";
+            //Aquí iría el número real del offset o la cadena
+            //para saber cual fué la última línea
+            let offset = 0;
+            let preArray = [];
+            let finalArray = [];
+            var promise = new Promise((resolve, reject) => {
+                this.dir = path.join(__dirname, '../../../tmp_mod');
+                let lr = new lineReader(`${this.dir}/${context.file}`, {
+                    encoding: 'utf8',
+                    skipEmptyLines: true,
+                });
+                context.db.getConnection((err, conn) => {
+                    if (err)
+                        logger_module_1.default("Error de Conexion", err);
+                    reject(err);
+                    lr.on('line', line => {
+                        if (offset == 0) {
+                            //logger("LOGGER", offset)
                         }
-                    }
-                    offset = offset + 1;
-                });
-                lr.on('error', e => {
-                    logger_module_1.default("Error en Lectura", e);
-                    reject(e);
-                });
-                lr.on('end', () => {
-                    //finalArray.push(preArray)
-                    //logger("Este es el Array", finalArray)
-                    offset = 0;
-                    context.db.end();
-                    resolve(context);
+                        else {
+                            let preString = line.split(',');
+                            lr.pause();
+                            preString.forEach(cadena => {
+                                preArray.push(`${cadena}`);
+                            });
+                            finalArray.push(preArray);
+                            preArray = [];
+                            lr.resume();
+                            if (offset == 10) {
+                                lr.pause();
+                                conn.query(`INSERT INTO ${context.tblname} ( ${context.fieldnms} ) VALUES ?`, [finalArray], err => {
+                                    if (err) {
+                                        logger_module_1.default("Error de inserción", err.sqlMessage);
+                                        reject(err);
+                                    }
+                                    else {
+                                        offset = 0;
+                                        finalArray = [];
+                                        lr.resume();
+                                    }
+                                });
+                            }
+                        }
+                        offset = offset + 1;
+                    });
+                    lr.on('error', e => {
+                        logger_module_1.default("Error en Lectura", e);
+                        reject(e);
+                    });
+                    lr.on('end', () => {
+                        //finalArray.push(preArray)
+                        //logger("Este es el Array", finalArray)
+                        offset = 0;
+                        context.db.end();
+                        resolve(context);
+                    });
                 });
             });
-            // fs.createReadStream(`${this.dir}${context.file}`).pipe(parse({
-            //   delimiter: ',',
-            //   columns: true,
-            //   relax_column_count: true
-            // }, (err, data) => {
-            //     if (err) reject(err);
-            //     async.eachSeries(data, (datum, next) => {
-            //         logger("A punto de", `run INSERT INTO ${context.tblname} ( ${context.fieldnms} ) VALUES ( ${context.qs} )`);
-            //       var d = [];
-            //       try {
-            //           context.headers.forEach(hdr => {
-            //               d.push(datum[hdr]);
-            //           });
-            //       } catch (e) {
-            //           console.error(e.stack);
-            //       }
-            //       // console.log(`${d.length}: ${util.inspect(d)}`);
-            //       if (d.length > 0) {
-            //           context.db.query(`INSERT INTO ${context.tblname} ( ${context.fieldnms} ) VALUES ( ${context.qs} )`, d,
-            //           err => {
-            //               if (err) { logger("Ocurrió un error", err); next(err); }
-            //               else setTimeout(() => { next(); });
-            //           });
-            //       } else { logger("Mensaje", `empty row ${util.inspect(datum)} ${util.inspect(d)}`); next(); }
-            //     },
-            //     err => {
-            //         if (err) reject(err)
-            //         else context.finaliza = true; resolve(context);
-            //     })
-            // }))
-        });
+        }
+        catch (e) {
+            logger_module_1.default("Un error general", e);
+        }
         return promise;
     }
 }
