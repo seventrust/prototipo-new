@@ -124,40 +124,51 @@ class CargaData {
   }
 
   public insertDataToTables(context: any): Promise<any> {
-    //logger("Insert Data To Tables", context.file)
+    let finalString: string  = ""
+    //Aquí iría el número real del offset o la cadena
+    //para saber cual fué la última línea
+    let offset = 0
+    let preArray = []
+    let finalArray = []
+
     var promise = new Promise((resolve, reject) => {
-      var finalString: string  = ""
       this.dir = path.join(__dirname, '../../../tmp_mod')
       let lr = new lineReader(`${this.dir}/${context.file}`,
         {
           encoding: 'utf8',
           skipEmptyLines: true,
-          start: 2
+          //start: 2
       })
-      var preArray = []
-      var finalArray = []
-
       context.db.getConnection((err, conn) => {
         if(err) logger("Error de Conexion", err); reject(err)
-
         lr.on('line', line => {
-          let preString = line.split(',')
-          preString.forEach(cadena => {
-            cadena = `"${cadena}"`
-            finalString += cadena+","
-          })
-          lr.pause()
-          finalString = finalString.substring(0, finalString.length - 1 )
-          conn.query(`INSERT INTO ${context.tblname} ( ${context.fieldnms} ) VALUES (?)`, [finalString],
-            err => {
-                if(err) {
-                  logger("Error de inserción", err.message)
-                  reject(err)
-                }else {
-                  conn.release()
-                  lr.resume()
-                }
-          })
+          if(offset == 0){
+            //logger("LOGGER", offset)
+          }else {
+
+            let preString = line.split(',')
+            lr.pause()
+            preString.forEach(cadena => {
+              preArray.push(`${cadena}`)
+            })
+            finalArray.push(preArray)
+            lr.resume()
+            if(offset == 10){
+              lr.pause()
+              console.log(finalArray)
+              conn.query(`INSERT INTO ${context.tblname} ( ${context.fieldnms} ) VALUES ?`, [finalArray],
+                err => {
+                    if(err) {
+                      logger("Error de inserción", err.sqlMessage)
+                      reject(err)
+                    }else {
+                      offset = 0
+                      lr.resume()
+                    }
+              })
+            }
+          }
+          offset = offset + 1
         })
 
         lr.on('error', e => {
@@ -168,6 +179,8 @@ class CargaData {
         lr.on('end', () => {
           //finalArray.push(preArray)
           //logger("Este es el Array", finalArray)
+          offset = 0
+          context.db.end()
           resolve(context)
         })
 

@@ -61,11 +61,11 @@ class Dataset {
             context = yield carga_data_module_1.default.getConnection(context);
             logger_module_1.default("Contexto parte 2", context);
             context = yield carga_data_module_1.default.dropTables(context);
-            logger_module_1.default("Contexto parte 3", context);
+            //logger("Contexto parte 3", context)
             context = yield carga_data_module_1.default.createTables(context);
-            logger_module_1.default("Contexto parte 4", context);
+            //logger("Contexto parte 4", context)
             context = yield carga_data_module_1.default.insertDataToTables(context);
-            logger_module_1.default("Contexto parte 5", context);
+            //logger("Contexto parte 5", context)
             if (!context.finaliza) {
                 logger_module_1.default('Mala', 'Ocurrio algo muy malo xD');
             }
