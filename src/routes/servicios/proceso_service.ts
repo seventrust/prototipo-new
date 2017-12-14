@@ -27,7 +27,7 @@ class InicioProceso {
 
   public finalizarProceso(input: any): void {
 
-    let SQL = `UPDATE prototipo.mv_proceso_etl SET fechaFin = "${input['fechaFin']}", estaActivo = 1
+    let SQL = `UPDATE prototipo.mv_proceso_etl SET fechaFin = "${input['fechaFin']}", estaActivo = 0
     WHERE uuid like "${input['uuid']}" `
 
     this.conn.query(SQL, (err, res) => {

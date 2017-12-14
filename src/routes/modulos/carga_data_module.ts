@@ -10,6 +10,7 @@ import * as lineReader from 'line-by-line'
 import * as leftpad from 'leftpad'
 import entorno from '../utils/config_module'
 import logger from '../utils/logger_module'
+import inicioProceso from '../servicios/proceso_service'
 
 class CargaData {
   private dir
@@ -119,12 +120,10 @@ class CargaData {
         })
       })
     })
-
     return promise
   }
 
   public insertDataToTables(context: any): Promise<any> {
-    try{
       let finalString: string  = ""
       //Aquí iría el número real del offset o la cadena
       //para saber cual fué la última línea
@@ -132,63 +131,71 @@ class CargaData {
       let preArray = []
       let finalArray = []
       var promise = new Promise((resolve, reject) => {
-        this.dir = path.join(__dirname, '../../../tmp_mod')
-        let lr = new lineReader(`${this.dir}/${context.file}`,
-          {
-            encoding: 'utf8',
-            skipEmptyLines: true,
-            //start: 2
-        })
-        context.db.getConnection((err, conn) => {
-          if(err) logger("Error de Conexion", err); reject(err)
-          lr.on('line', line => {
-            if(offset == 0){
-              //logger("LOGGER", offset)
-            }else {
+        try{
+          this.dir = path.join(__dirname, '../../../tmp_mod')
+          let lr = new lineReader(`${this.dir}/${context.file}`,
+            {
+              encoding: 'utf8',
+              skipEmptyLines: true,
+              //start: 2
+          })
+          context.db.getConnection((err, conn) => {
+            if(err) logger("Error de Conexion", err); reject(err)
+            lr.on('line', line => {
+              if(offset == 0){
+                //logger("LOGGER", offset)
+              }else {
 
-              let preString = line.split(',')
-              lr.pause()
-              preString.forEach(cadena => {
-                preArray.push(`${cadena}`)
-              })
-              finalArray.push(preArray)
-              preArray = []
-              lr.resume()
-              if(offset == 10){
+                let preString = line.split(',')
                 lr.pause()
-                conn.query(`INSERT INTO ${context.tblname} ( ${context.fieldnms} ) VALUES ?`, [finalArray],
-                  err => {
-                      if(err) {
-                        logger("Error de inserción", err.sqlMessage)
-                        reject(err)
-                      }else {
-                        offset = 0
-                        finalArray = []
-                        lr.resume()
-                      }
+                preString.forEach(cadena => {
+                  preArray.push(`${cadena}`)
                 })
+                finalArray.push(preArray)
+                preArray = []
+                lr.resume()
+                if(offset == 100){
+                  lr.pause()
+                  conn.query(`INSERT INTO ${context.tblname} ( ${context.fieldnms} ) VALUES ?`, [finalArray],
+                    err => {
+                        if(err) {
+                          logger("Error de inserción", err.sqlMessage)
+                          reject(err)
+                        }else {
+                          offset = 0
+                          finalArray = []
+                          lr.resume()
+                        }
+                  })
+                }
               }
-            }
-            offset = offset + 1
-          })
+              offset = offset + 1
+            })
 
-          lr.on('error', e => {
-            logger("Error en Lectura", e)
-            reject(e)
-          })
+            lr.on('error', e => {
+              logger("Error en Lectura", e)
+              reject(e)
+            })
 
-          lr.on('end', () => {
-            //finalArray.push(preArray)
-            //logger("Este es el Array", finalArray)
-            offset = 0
-            context.db.end()
-            resolve(context)
+            lr.on('end', () => {
+              let input: any = []
+              input['fechaFin'] = moment().format('YYYY-MM-DD h:mm:ss')
+              input['fileOffset'] = offset
+              input['uuid'] = context.id
+              //finalArray.push(preArray)
+              //logger("Este es el Array", finalArray)
+              offset = 0
+              context.db.end()
+              inicioProceso.finalizarProceso(input)
+              resolve(context)
+            })
           })
-        })
+        }catch(e){
+
+          logger("Un error general", e)
+          reject(e)
+        }
       })
-    }catch(e){
-      logger("Un error general", e)
-    }
     return promise
   }
 }

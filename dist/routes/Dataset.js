@@ -12,7 +12,6 @@ const express = require("express");
 const uuid = require("uuid/v4");
 const moment = require("moment");
 const proceso_service_1 = require("./servicios/proceso_service");
-const logger_module_1 = require("./utils/logger_module");
 const carga_data_module_1 = require("./modulos/carga_data_module");
 //la clase Dataset se encargará de realizar todas las operaciones con los
 //datasets de Brigthspace
@@ -51,28 +50,21 @@ class Dataset {
     }
     notificarFinDelProceso(id, count) {
         return __awaiter(this, void 0, void 0, function* () {
-            let input = [];
-            input['fechaFin'] = moment().format('YYYY-MM-DD h:mm:ss');
-            input['fileOffset'] = count;
-            input['uuid'] = id;
             //Se hace el llamdo al metodo para empezar a realizar la carga del cvs
             var context = yield carga_data_module_1.default.iniciarCarga();
-            //logger("Contexto parte 1", JSON.stringify(context))
             context = yield carga_data_module_1.default.getConnection(context);
-            //logger("Contexto parte 2", context)
             context = yield carga_data_module_1.default.dropTables(context);
-            //logger("Contexto parte 3", context)
             context = yield carga_data_module_1.default.createTables(context);
-            //logger("Contexto parte 4", context)
+            //Como testing probar como una promesa com
+            context.id = id;
             context = yield carga_data_module_1.default.insertDataToTables(context);
-            logger_module_1.default("Contexto parte 5", context);
-            if (!context.finaliza) {
-                logger_module_1.default('Mala', 'Ocurrio algo muy malo xD');
-            }
-            else {
-                proceso_service_1.default.finalizarProceso(input);
-            }
-            //
+            //logger("Context final", JSON.stringify(context))
+            // if(!context.finaliza){
+            //   logger('Mala', 'Ocurrio algo muy malo xD')
+            // }else {
+            //   context.db.end()
+            //   inicioProceso.finalizarProceso(input)
+            // }
         });
     }
 }

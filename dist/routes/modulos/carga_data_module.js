@@ -2,11 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = require("fs");
 const path = require("path");
+const moment = require("moment");
 const csvHeaders = require("csv-headers");
 const mysql = require("mysql");
 const lineReader = require("line-by-line");
 const config_module_1 = require("../utils/config_module");
 const logger_module_1 = require("../utils/logger_module");
+const proceso_service_1 = require("../servicios/proceso_service");
 class CargaData {
     constructor() { }
     iniciarCarga() {
@@ -118,14 +120,14 @@ class CargaData {
         return promise;
     }
     insertDataToTables(context) {
-        try {
-            let finalString = "";
-            //Aquí iría el número real del offset o la cadena
-            //para saber cual fué la última línea
-            let offset = 0;
-            let preArray = [];
-            let finalArray = [];
-            var promise = new Promise((resolve, reject) => {
+        let finalString = "";
+        //Aquí iría el número real del offset o la cadena
+        //para saber cual fué la última línea
+        let offset = 0;
+        let preArray = [];
+        let finalArray = [];
+        var promise = new Promise((resolve, reject) => {
+            try {
                 this.dir = path.join(__dirname, '../../../tmp_mod');
                 let lr = new lineReader(`${this.dir}/${context.file}`, {
                     encoding: 'utf8',
@@ -148,7 +150,7 @@ class CargaData {
                             finalArray.push(preArray);
                             preArray = [];
                             lr.resume();
-                            if (offset == 10) {
+                            if (offset == 100) {
                                 lr.pause();
                                 conn.query(`INSERT INTO ${context.tblname} ( ${context.fieldnms} ) VALUES ?`, [finalArray], err => {
                                     if (err) {
@@ -170,18 +172,24 @@ class CargaData {
                         reject(e);
                     });
                     lr.on('end', () => {
+                        let input = [];
+                        input['fechaFin'] = moment().format('YYYY-MM-DD h:mm:ss');
+                        input['fileOffset'] = offset;
+                        input['uuid'] = context.id;
                         //finalArray.push(preArray)
                         //logger("Este es el Array", finalArray)
                         offset = 0;
                         context.db.end();
+                        proceso_service_1.default.finalizarProceso(input);
                         resolve(context);
                     });
                 });
-            });
-        }
-        catch (e) {
-            logger_module_1.default("Un error general", e);
-        }
+            }
+            catch (e) {
+                logger_module_1.default("Un error general", e);
+                reject(e);
+            }
+        });
         return promise;
     }
 }

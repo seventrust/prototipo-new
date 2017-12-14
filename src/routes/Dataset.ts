@@ -47,28 +47,27 @@ class Dataset {
   }
 
   private async notificarFinDelProceso(id: string, count: number): Promise<void> {
-    let input: any = []
-    input['fechaFin'] = moment().format('YYYY-MM-DD h:mm:ss')
-    input['fileOffset'] = count
-    input['uuid'] = id
+
     //Se hace el llamdo al metodo para empezar a realizar la carga del cvs
     var context = await cargaData.iniciarCarga()
-    //logger("Contexto parte 1", JSON.stringify(context))
-    context = await cargaData.getConnection(context)
-    //logger("Contexto parte 2", context)
-    context = await cargaData.dropTables(context)
-    //logger("Contexto parte 3", context)
-    context = await cargaData.createTables(context)
-    //logger("Contexto parte 4", context)
-    context = await cargaData.insertDataToTables(context)
-    logger("Contexto parte 5", context)
-    if(!context.finaliza){
-      logger('Mala', 'Ocurrio algo muy malo xD')
-    }else {
-      inicioProceso.finalizarProceso(input)
-    }
-    //
 
+    context = await cargaData.getConnection(context)
+
+    context = await cargaData.dropTables(context)
+
+    context = await cargaData.createTables(context)
+
+    //Como testing probar como una promesa com
+    context.id = id
+    context = await cargaData.insertDataToTables(context)
+
+    //logger("Context final", JSON.stringify(context))
+    // if(!context.finaliza){
+    //   logger('Mala', 'Ocurrio algo muy malo xD')
+    // }else {
+    //   context.db.end()
+    //   inicioProceso.finalizarProceso(input)
+    // }
   }
 }
 
